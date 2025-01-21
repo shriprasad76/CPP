@@ -1,0 +1,23 @@
+#include<iostream>
+#include<conio.h>
+using namespace std;
+int swapp(int c,int d)
+{
+	cout<<"Before swapping:\na="<<c<<"\nb="<<d;
+	c=c+d;
+	d=c-d;
+	c=c-d;
+	cout<<"\nAfter swapping:\na="<<c<<"\nb="<<d;
+	
+}
+int main()
+{
+	int a,b;
+	cout<<"Enter two numbers:\na=";
+	cin>>a;
+	cout<<"\nb=";
+	cin>>b;
+	swapp(a,b);
+	
+	
+}
