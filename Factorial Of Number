@@ -1,0 +1,22 @@
+#include<iostream>
+#include<conio.h>
+using namespace std;
+int fact(int a)
+{
+	int i,factorial=1;
+	for(i=1;i<=a;i++)
+	{
+		factorial=factorial*i;
+	}
+	return factorial;
+	
+}
+int main()
+{
+	int num,result;
+	cout<<"Enter number:";
+	cin>>num;
+	result=fact(num);
+	cout<<"Factorial of "<<num<<" is: "<<result;
+	
+}
