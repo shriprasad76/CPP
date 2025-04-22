@@ -1,0 +1,257 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstdlib> 
+
+using namespace std;
+
+bool isRouteIDUsed(int routeID) {
+    ifstream routeFile("routes.txt");
+    string line;
+
+    while (getline(routeFile, line)) {
+        int pos = line.find(',');
+        if (pos != string::npos) {
+            int existingID = atoi(line.substr(0, pos).c_str());
+            if (existingID == routeID) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void addRoute() {
+    ofstream routeFile("routes.txt", ios::app);
+    if (!routeFile) {
+        cout << "Error opening routes file!\n";
+        return;
+    }
+
+    string destination;
+    int routeID;
+    float fare;
+
+    cout << "\nEnter New Route ID: ";
+    cin >> routeID;
+
+    if (isRouteIDUsed(routeID)) {
+        cout << " Route ID already exists! Please use a different ID.\n";
+        return;
+    }
+
+    cin.ignore(); 
+    cout << "Enter Destination City: ";
+    getline(cin, destination);
+    cout << "Enter Amount: ";
+    cin >> fare;
+
+    string routeName = "Ichalkaranji to " + destination;
+    routeFile << routeID << "," << routeName << "," << fare << endl;
+    routeFile.close();
+
+    cout << "\n Route added successfully: " << routeName << " - " << fare << "\n";
+}
+
+
+void viewRoutes() {
+    ifstream routeFile("routes.txt");
+    if (!routeFile) {
+        cout << "\n No routes available yet.\n";
+        return;
+    }
+
+    string line;
+    cout << "\n Available Bus Routes:\n";
+    cout << "---------------------------------\n";
+    while (getline(routeFile, line)) {
+        int pos1 = line.find(',');
+        int pos2 = line.rfind(',');
+
+        if (pos1 != string::npos && pos2 != string::npos && pos2 > pos1) {
+            string id = line.substr(0, pos1);
+            string name = line.substr(pos1 + 1, pos2 - pos1 - 1);
+            string fare = line.substr(pos2 + 1);
+
+            cout << "Route ID: " << id << " | " << name << " | Fare:  " << fare << endl;
+        }
+    }
+    routeFile.close();
+}
+
+
+void bookBus() {
+    string studentName, prn;
+    int routeID;
+    bool found = false;
+    string line, routeName;
+    float fare = 0;
+
+    cin.ignore(); 
+    cout << "\nEnter your PRN number: ";
+    getline(cin, prn);
+    cout << "Enter your name: ";
+    getline(cin, studentName);
+    cout << "Enter Route ID to book: ";
+    cin >> routeID;
+
+    ifstream routeFile("routes.txt");
+    if (!routeFile) {
+        cout << "Error: Could not open routes file.\n";
+        return;
+    }
+
+    while (getline(routeFile, line)) {
+        int pos1 = line.find(',');
+        int pos2 = line.rfind(',');
+
+        if (pos1 != string::npos && pos2 != string::npos) {
+            int fileRouteID = atoi(line.substr(0, pos1).c_str());
+            if (fileRouteID == routeID) {
+                routeName = line.substr(pos1 + 1, pos2 - pos1 - 1);
+                fare = atof(line.substr(pos2 + 1).c_str());
+                found = true;
+                break;
+            }
+        }
+    }
+    routeFile.close();
+
+    if (!found) {
+        cout << " Route ID not found. Please try again.\n";
+        return;
+    }
+
+    ofstream bookingFile("bookings.txt", ios::app);
+    if (!bookingFile) {
+        cout << "Error opening bookings file.\n";
+        return;
+    }
+
+    bookingFile << prn << "," << studentName << "," << routeID << "," << fare << endl;
+    bookingFile.close();
+
+    cout << "\n? Booking Confirmed!\n";
+    cout << "PRN: " << prn << "\n";
+    cout << "Student: " << studentName << "\n";
+    cout << "Route: " << routeName << "\n";
+    cout << "Amount to Pay: ?" << fare << "\n";
+}
+
+
+void viewBookings() {
+    ifstream bookingFile("bookings.txt");
+    if (!bookingFile) {
+        cout << "\n?? No bookings found.\n";
+        return;
+    }
+
+    string line;
+    cout << "\n  Student Bookings:\n";
+    cout << "------------------------------------------------------\n";
+    while (getline(bookingFile, line)) {
+        int pos1 = line.find(',');
+        int pos2 = line.find(',', pos1 + 1);
+        int pos3 = line.rfind(',');
+
+        if (pos1 != string::npos && pos2 != string::npos && pos3 != string::npos) {
+            string prn = line.substr(0, pos1);
+            string name = line.substr(pos1 + 1, pos2 - pos1 - 1);
+            string routeID = line.substr(pos2 + 1, pos3 - pos2 - 1);
+            string fare = line.substr(pos3 + 1);
+
+            cout << "PRN: " << prn << " | Student: " << name << " | Route ID: " << routeID << " | Paid:Rs " << fare << endl;
+        }
+    }
+    bookingFile.close();
+}
+
+
+void deleteRoute() {
+    int deleteID;
+    cout << "\nEnter the Route ID to delete: ";
+    cin >> deleteID;
+
+    ifstream routeFile("routes.txt");
+    ofstream tempFile("temp.txt");
+
+    if (!routeFile || !tempFile) {
+        cout << "Error opening files.\n";
+        return;
+    }
+
+    string line;
+    bool found = false;
+
+    while (getline(routeFile, line)) {
+        int pos = line.find(',');
+        if (pos != string::npos) {
+            int id = atoi(line.substr(0, pos).c_str());
+            if (id == deleteID) {
+                found = true; 
+                continue;
+            }
+        }
+        tempFile << line << endl; 
+    }
+
+    routeFile.close();
+    tempFile.close();
+
+    remove("routes.txt");
+    rename("temp.txt", "routes.txt");
+
+    if (found) {
+        cout << " Route ID " << deleteID << " deleted successfully.\n";
+    } else {
+        cout << " Route ID not found.\n";
+    }
+}
+
+// Main program
+int main() {
+    int choice;
+
+    cout << "====================================================\n";
+    cout << "!! Welcome to the D.K.T.E. College Bus Booking System !!\n";
+    cout << "====================================================\n";
+
+    do {
+        cout << "\n======= Main Menu =======\n";
+        cout << "1. Add Route (Admin)\n";
+        cout << "2. View Available Routes\n";
+        cout << "3. Book a Bus (Student)\n";
+        cout << "4. View All Bookings\n";
+        cout << "5. Delete a Route (Admin)\n";
+        cout << "6. Exit\n";
+        cout << "Enter your choice (1-6): ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                addRoute();
+                break;
+            case 2:
+                viewRoutes();
+                break;
+            case 3:
+                viewRoutes();
+                bookBus();
+                break;
+            case 4:
+                viewBookings();
+                break;
+            case 5:
+                deleteRoute();
+                break;
+            case 6:
+                cout << "\n!! Thank you for using the D.K.T.E. Bus Booking System. Goodbye !!\n";
+                break;
+            default:
+                cout << "Invalid choice. Please enter a number between 1 and 6.\n";
+        }
+    } while (choice != 6);
+
+    return 0;
+}
